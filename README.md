@@ -33,17 +33,6 @@ JSON exports preserve both entries and the current tag lists. CSV exports includ
 - [Chart.js](https://www.chartjs.org/) for analytics charts
 - [Hammer.js](https://hammerjs.github.io/) and `chartjs-plugin-zoom` for mobile chart interactions
 
-## Running Locally
-
-Open `index.html` in a browser, or serve the folder locally:
-
-```bash
-python3 -m http.server 8000
-```
-
-Then visit `http://localhost:8000`.
-
-Because the app loads Chart.js and related chart libraries from CDNs, an internet connection is required for the analytics charts.
 
 ## Project Context
 
@@ -55,12 +44,4 @@ This project was built as a personal journaling tool focused on quick daily refl
 - There is no account sync or cloud backup.
 - Importing a JSON backup replaces the current journal data.
 - Analytics depend on external CDN libraries.
-
-## Possible Improvements
-
-- Add local/offline bundled chart dependencies.
-- Add a clearer backup and restore workflow.
-- Add tag renaming with historical migration.
-- Add richer text search across entries.
-- Add optional encryption for local journal data.
 
