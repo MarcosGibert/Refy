@@ -1,0 +1,1020 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Refy Journal</title>
+  <link rel="apple-touch-icon" href="icono.png">
+  <link rel="icon" type="image/png" href="icono.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+  <style>
+    :root {
+      --bg-grad: linear-gradient(135deg, #8182DE 0%, #5556e6 100%);
+      --card-glass: rgba(0,0,0,0.15);
+      --input-bg: rgba(0,0,0,0.2);
+      --txt: #FFFFFF;
+      --muted: #AAB2D6;
+      --accent-coral: #FF8E7B;
+      --accent-coral-grad: linear-gradient(to right,#FF8E7B,#FF6B6B);
+      --accent-blue-grad: linear-gradient(to right,#56CCF2,#2F80ED);
+      --danger: #FF6B6B;
+      --shadow-soft: 0 10px 30px -5px rgba(0,0,0,0.3);
+      --shadow-glow: 0 5px 15px rgba(255,142,123,0.4);
+      font-family: 'Poppins', sans-serif;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { margin:0; background:var(--bg-grad); color:var(--txt); height:100dvh; display:flex; flex-direction:column; overflow:hidden; }
+    .wrap { max-width:600px; margin:0 auto; padding:24px; width:100%; flex:1; display:flex; flex-direction:column; overflow-y:auto; }
+    .view-section { display:none; flex-direction:column; flex:1; animation:slideUp .4s cubic-bezier(.25,.8,.25,1); }
+    .view-section.active { display:flex; }
+    @keyframes slideUp { from { opacity:0; transform:translateY(30px) scale(.98); } to { opacity:1; transform:none; } }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:800; letter-spacing:-.5px; }
+    h2 { font-size:22px; margin-bottom:24px; font-weight:700; text-align:center; }
+    .sub { color:var(--muted); font-size:15px; margin-bottom:24px; font-weight:600; }
+    input, textarea { width:100%; background:var(--input-bg); color:var(--txt); border:none; border-radius:20px; padding:16px 20px; outline:none; font-size:16px; font-family:inherit; box-shadow:inset 0 2px 4px rgba(0,0,0,.1); transition:background .3s; }
+    input:focus, textarea:focus { background:rgba(0,0,0,.3); }
+    textarea { min-height:250px; resize:none; line-height:1.6; }
+    .btn { border:none; background:var(--card-glass); color:var(--txt); padding:16px 24px; border-radius:50px; cursor:pointer; font-weight:700; font-size:15px; display:inline-flex; align-items:center; justify-content:center; gap:10px; transition:transform .2s,box-shadow .2s; box-shadow:var(--shadow-soft); }
+    .btn:active { transform:scale(.97); }
+    .btn.primary { background:var(--accent-coral-grad); color:#fff; box-shadow:var(--shadow-soft),var(--shadow-glow); }
+    .btn.danger { color:var(--danger); background:rgba(255,107,107,.15); }
+    .fab { position:fixed; bottom:30px; right:30px; background:var(--accent-coral-grad); color:#fff; width:64px; height:64px; border-radius:32px; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-soft),var(--shadow-glow); font-size:32px; cursor:pointer; border:none; z-index:100; transition:transform .2s; }
+    .fab:active { transform:scale(.9); }
+    .list-container { display:flex; flex-direction:column; gap:14px; padding-bottom:100px; }
+    .entry-card { background:var(--card-glass); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,.05); box-shadow:var(--shadow-soft); padding:20px; border-radius:24px; cursor:pointer; transition:transform .1s; }
+    .entry-card:active { transform:scale(.98); }
+    .entry-date { font-weight:800; font-size:16px; margin-bottom:6px; }
+    .entry-preview { color:var(--muted); font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.5; }
+    .entry-meta { display:flex; justify-content:space-between; margin-top:12px; font-size:13px; color:var(--muted); font-weight:600; }
+    .step { display:none; flex-direction:column; flex:1; }
+    .step.active { display:flex; }
+    .nav-bar { margin-top:auto; padding-top:30px; display:flex; justify-content:space-between; gap:15px; }
+    input[type=range] { -webkit-appearance:none; width:100%; background:transparent; border:none; padding:0; box-shadow:none; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; height:40px; width:40px; border-radius:50%; background:var(--accent-coral); box-shadow:0 0 0 6px rgba(255,142,123,.3),var(--shadow-glow); margin-top:-16px; transition:transform .2s; }
+    input[type=range]:active::-webkit-slider-thumb { transform:scale(1.1); }
+    input[type=range]::-webkit-slider-runnable-track { width:100%; height:8px; background:rgba(0,0,0,.2); border-radius:4px; }
+    .big-score { font-size:80px; font-weight:800; text-align:center; color:var(--accent-coral); margin:20px 0 40px; text-shadow:0 5px 15px rgba(255,142,123,.3); }
+    .checkgrid { display:grid; grid-template-columns:1fr 1fr; gap:12px; align-content:start; }
+    .check-btn { background:var(--card-glass); color:var(--muted); font-weight:600; padding:16px; border-radius:50px; text-align:center; font-size:14px; cursor:pointer; user-select:none; transition:all .3s ease; box-shadow:var(--shadow-soft); }
+    .check-btn.checked { background:var(--accent-blue-grad); color:#fff; box-shadow:0 5px 15px rgba(86,204,242,.4); transform:translateY(-2px); }
+    .nav-tabs { display:flex; gap:10px; margin-bottom:24px; background:var(--card-glass); padding:6px; border-radius:50px; backdrop-filter:blur(10px); }
+    .nav-tab { flex:1; padding:12px 20px; border:none; background:transparent; color:var(--muted); font-weight:700; font-size:14px; border-radius:50px; cursor:pointer; transition:all .3s; }
+    .nav-tab.active { background:var(--accent-coral-grad); color:#fff; box-shadow:var(--shadow-glow); }
+    .time-selector { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+    .time-btn { padding:10px 16px; border:none; background:var(--card-glass); color:var(--muted); border-radius:50px; font-weight:600; font-size:13px; cursor:pointer; transition:all .3s; }
+    .time-btn.active { background:var(--accent-blue-grad); color:#fff; box-shadow:0 5px 15px rgba(86,204,242,.4); }
+    .custom-dates { display:none; gap:10px; margin-top:10px; align-items:center; }
+    .custom-dates.active { display:flex; }
+    .custom-dates input { flex:1; min-width:0; padding:10px 14px; font-size:14px; }
+    .month-picker { display:none; gap:8px; margin-top:10px; align-items:center; flex-wrap:wrap; }
+    .month-picker.active { display:flex; }
+    .month-picker select { background:var(--input-bg); color:var(--txt); border:none; border-radius:20px; padding:10px 16px; font-size:14px; font-family:inherit; outline:none; cursor:pointer; }
+    .list-filter { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+    .list-filter-btn { padding:8px 14px; border:none; background:var(--card-glass); color:var(--muted); border-radius:50px; font-weight:600; font-size:12px; cursor:pointer; transition:all .3s; font-family:inherit; }
+    .list-filter-btn.active { background:var(--accent-coral-grad); color:#fff; box-shadow:var(--shadow-glow); }
+    .list-month-picker { display:none; gap:8px; margin-bottom:12px; align-items:center; flex-wrap:wrap; }
+    .list-month-picker.active { display:flex; }
+    .list-month-picker select { background:var(--input-bg); color:var(--txt); border:none; border-radius:20px; padding:10px 16px; font-size:13px; font-family:inherit; outline:none; cursor:pointer; }
+    .stats-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:24px; }
+    .stat-card { background:var(--card-glass); backdrop-filter:blur(10px); padding:16px; border-radius:20px; text-align:center; border:1px solid rgba(255,255,255,.05); }
+    .stat-value { font-size:28px; font-weight:800; color:var(--accent-coral); margin-bottom:4px; }
+    .stat-label { font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+    .chart-container { background:var(--card-glass); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,.05); border-radius:24px; padding:20px; margin-bottom:20px; box-shadow:var(--shadow-soft); }
+    .chart-title { font-size:16px; font-weight:700; margin-bottom:16px; }
+    .chart-wrapper { position:relative; height:300px; }
+    .empty-chart { display:flex; align-items:center; justify-content:center; height:100%; color:var(--muted); font-size:14px; font-weight:600; }
+    .load-more { text-align:center; padding:20px; color:var(--muted); font-size:13px; font-weight:600; }
+    .settings-panel { display:none; background:var(--card-glass); border:1px solid rgba(255,255,255,.05); border-radius:24px; padding:18px; margin-bottom:18px; box-shadow:var(--shadow-soft); }
+    .settings-panel.active { display:block; }
+    .settings-panel h2 { text-align:left; margin:0 0 8px; font-size:18px; }
+    .settings-panel .sub { margin-bottom:16px; font-size:13px; }
+    .tag-editor { display:grid; grid-template-columns:1fr; gap:18px; }
+    .tag-section-title { font-size:13px; font-weight:800; color:var(--txt); margin-bottom:10px; text-transform:uppercase; letter-spacing:.5px; }
+    .tag-list { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+    .tag-chip { display:inline-flex; align-items:center; gap:8px; background:rgba(0,0,0,.18); color:var(--txt); border:1px solid rgba(255,255,255,.08); border-radius:999px; padding:8px 10px 8px 14px; font-size:13px; font-weight:600; }
+    .tag-chip button { width:22px; height:22px; border-radius:50%; border:none; background:rgba(255,107,107,.22); color:#fff; cursor:pointer; font-weight:800; line-height:1; }
+    .tag-add-row { display:flex; gap:8px; }
+    .tag-add-row input { padding:11px 14px; border-radius:16px; font-size:14px; }
+    .tag-add-row .btn { padding:11px 16px; font-size:13px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav-tabs">
+    <button class="nav-tab active" id="tabJournal">Journal</button>
+    <button class="nav-tab" id="tabAnalytics">Analytics</button>
+  </div>
+
+  <!-- LIST VIEW -->
+  <div id="viewList" class="view-section active">
+    <header>
+      <h1>Refy Journal</h1>
+      <div class="sub" id="statsLine">Loading...</div>
+    </header>
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;opacity:.7;">
+      <button class="btn" id="btnExportCSV" style="font-size:12px;padding:10px 16px;">CSV</button>
+      <button class="btn" id="btnExport" style="font-size:12px;padding:10px 16px;">JSON</button>
+      <input type="file" id="importFile" style="display:none" accept=".json">
+      <button class="btn" onclick="document.getElementById('importFile').click()" style="font-size:12px;padding:10px 16px;">Import</button>
+      <button class="btn" id="btnManageTags" style="font-size:12px;padding:10px 16px;">Tags</button>
+    </div>
+    <div class="settings-panel" id="tagSettingsPanel">
+      <h2>Customize tags</h2>
+      <div class="sub">Edit the activity and emotion options that appear when writing an entry. Removing a tag only hides it from future selection; past entries keep their data.</div>
+      <div class="tag-editor">
+        <div>
+          <div class="tag-section-title">Activities</div>
+          <div class="tag-list" id="activityTagList"></div>
+          <div class="tag-add-row">
+            <input type="text" id="newActivityInput" placeholder="Add activity..." maxlength="32">
+            <button class="btn primary" id="btnAddActivity">Add</button>
+          </div>
+        </div>
+        <div>
+          <div class="tag-section-title">Emotions</div>
+          <div class="tag-list" id="emotionTagList"></div>
+          <div class="tag-add-row">
+            <input type="text" id="newEmotionInput" placeholder="Add emotion..." maxlength="32">
+            <button class="btn primary" id="btnAddEmotion">Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="list-filter">
+      <button class="list-filter-btn active" data-list-range="all">All</button>
+      <button class="list-filter-btn" data-list-range="year">This year</button>
+      <button class="list-filter-btn" data-list-range="month">This month</button>
+      <button class="list-filter-btn" data-list-range="specificmonth">Specific month</button>
+    </div>
+    <div class="list-month-picker" id="listMesPicker">
+      <select id="listPickerMonth">
+        <option value="01">January</option><option value="02">February</option>
+        <option value="03">March</option><option value="04">April</option>
+        <option value="05">May</option><option value="06">June</option>
+        <option value="07">July</option><option value="08">August</option>
+        <option value="09">September</option><option value="10">October</option>
+        <option value="11">November</option><option value="12">December</option>
+      </select>
+      <select id="listPickerYear"></select>
+      <button class="btn primary" id="btnApplyListMonth" style="padding:10px 18px;font-size:13px;">Apply</button>
+    </div>
+    <div class="list-container" id="entriesList"></div>
+    <button class="fab" id="btnNew">+</button>
+  </div>
+
+  <!-- EDITOR VIEW -->
+  <div id="viewEditor" class="view-section">
+    <div id="step1" class="step active">
+      <h2>How was your day?</h2>
+      <label style="font-size:12px;color:var(--muted);margin-bottom:5px;display:block;">Date</label>
+      <input type="date" id="dateInput" style="margin-bottom:20px;">
+      <input type="text" id="titleInput" placeholder="A short title..." style="margin-bottom:20px;font-weight:bold;font-size:18px;">
+      <textarea id="textInput" placeholder="Write about what happened today..."></textarea>
+      <div class="nav-bar">
+        <button class="btn danger" id="btnDeleteEntry">Delete</button>
+        <button class="btn primary" onclick="goToStep(2)">Next</button>
+      </div>
+    </div>
+    <div id="step2" class="step">
+      <h2>Day rating</h2>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+        <div class="big-score" id="scoreDisplay">5.0</div>
+        <input type="range" id="scoreInput" min="1" max="10" step="0.1" value="5">
+        <div style="text-align:center;color:var(--muted);margin-top:20px;font-weight:600;">Slide to rate your day</div>
+      </div>
+      <div class="nav-bar">
+        <button class="btn" onclick="goToStep(1)">Back</button>
+        <button class="btn primary" onclick="goToStep(3)">Next</button>
+      </div>
+    </div>
+    <div id="step3" class="step">
+      <h2>What did you do today?</h2>
+      <div class="checkgrid" id="gridActivities"></div>
+      <div class="nav-bar">
+        <button class="btn" onclick="goToStep(2)">Back</button>
+        <button class="btn primary" onclick="goToStep(4)">Next</button>
+      </div>
+    </div>
+    <div id="step4" class="step">
+      <h2>How did you feel?</h2>
+      <div class="checkgrid" id="gridEmotions"></div>
+      <div class="nav-bar">
+        <button class="btn" onclick="goToStep(3)">Back</button>
+        <button class="btn primary" id="btnFinish">Save Entry ✓</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS VIEW -->
+  <div id="viewAnalytics" class="view-section">
+    <header>
+      <h1>Analytics</h1>
+      <div class="sub">Explore your patterns and trends</div>
+    </header>
+    <div class="time-selector">
+      <button class="time-btn active" data-range="month">This month</button>
+      <button class="time-btn" data-range="prevmonth">Previous month</button>
+      <button class="time-btn" data-range="6months">Last 6 months</button>
+      <button class="time-btn" data-range="year">This year</button>
+      <button class="time-btn" data-range="all">All time</button>
+      <button class="time-btn" data-range="specificmonth">Specific month</button>
+      <button class="time-btn" data-range="custom">Custom</button>
+    </div>
+    <div class="month-picker" id="analyticsMesPicker">
+      <select id="analyticsPickerMonth">
+        <option value="01">January</option><option value="02">February</option>
+        <option value="03">March</option><option value="04">April</option>
+        <option value="05">May</option><option value="06">June</option>
+        <option value="07">July</option><option value="08">August</option>
+        <option value="09">September</option><option value="10">October</option>
+        <option value="11">November</option><option value="12">December</option>
+      </select>
+      <select id="analyticsPickerYear"></select>
+      <button class="btn primary" id="btnApplySpecificMonth">Apply</button>
+    </div>
+    <div class="custom-dates" id="customDates">
+      <input type="date" id="customStart">
+      <span style="color:var(--muted);">→</span>
+      <input type="date" id="customEnd">
+      <button class="btn primary" id="btnApplyCustom">Apply</button>
+    </div>
+    <div class="stats-cards">
+      <div class="stat-card"><div class="stat-value" id="statEntries">0</div><div class="stat-label">Entries</div></div>
+      <div class="stat-card"><div class="stat-value" id="statAvgMood">0.0</div><div class="stat-label">Average mood</div></div>
+      <div class="stat-card"><div class="stat-value" id="statBestDay">-</div><div class="stat-label">Best day</div></div>
+      <div class="stat-card"><div class="stat-value" id="statVariance">0.00</div><div class="stat-label">Mood variance</div></div>
+      <div class="stat-card"><div class="stat-value" id="statAvgActivities">0.00</div><div class="stat-label">Activities/day</div></div>
+      <div class="stat-card"><div class="stat-value" id="statAvgEmotions">0.00</div><div class="stat-label">Emotions/day</div></div>
+    </div>
+    <div class="chart-container">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div class="chart-title" style="margin-bottom:0;">Mood over time</div>
+        <button id="btnResetZoom" style="font-size:11px;padding:6px 12px;border:none;background:rgba(0,0,0,0.2);color:var(--muted);border-radius:50px;cursor:pointer;font-weight:600;font-family:inherit;">Reset zoom</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;font-weight:600;">Pinch to zoom · Drag to navigate</div>
+      <div class="chart-wrapper" id="chartMoodWrapper"><canvas id="chartMood"></canvas></div>
+    </div>
+    <div class="chart-container">
+      <div class="chart-title">Activity frequency</div>
+      <div class="chart-wrapper" id="chartActivitiesWrapper"><canvas id="chartActivities"></canvas></div>
+    </div>
+    <div class="chart-container">
+      <div class="chart-title">Emotion distribution</div>
+      <div class="chart-wrapper" id="chartEmotionsWrapper"><canvas id="chartEmotions"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  "use strict";
+
+  var STORAGE_KEY = "journal:v2";
+  var LEGACY_STORAGE_KEY = "journal:v1";
+  var PAGE_SIZE = 30;
+
+  var DEFAULT_ACTIVITIES = ["Family","School","Work","Relationships","Friends","Colleagues","Health","Hobbies","Sleep","Rest","Exercise","Chores","Study","Creativity"];
+  var DEFAULT_EMOTIONS   = ["Happy","Content","Thoughtful","Confused","Bored","Tired","Neutral","Awkward","Stressed","Angry","Irritated","Anxious","Down","Calm","Grateful"];
+
+  var ACTIVITY_MIGRATIONS = {
+    "School/work": ["School", "Work"],
+    "Relationship": ["Relationships"],
+    "Friends/colleagues": ["Friends", "Colleagues"],
+    "Relaxing": ["Rest"]
+  };
+  var EMOTION_MIGRATIONS = {
+    "Good": ["Content"],
+    "Confused/thoughtful": ["Confused", "Thoughtful"],
+    "Bored/tired/neutral": ["Bored", "Tired", "Neutral"],
+    "Angry/ pissed": ["Angry", "Irritated"]
+  };
+
+  var entries = [];
+  var activities = DEFAULT_ACTIVITIES.slice();
+  var emotions = DEFAULT_EMOTIONS.slice();
+  var currentEntry = {};
+  var currentPage = 0;
+  var currentRange = "month";
+  var customStartDate = null;
+  var customEndDate = null;
+  var specificMonthStr = null;      // "YYYY-MM" for analytics
+  var listRange = "all";            // active list filter
+  var listSpecificMonthStr = null;  // "YYYY-MM" for the entry list
+  var moodChart = null;
+  var activitiesChart = null;
+  var emotionsChart = null;
+
+  // DOM
+  var viewList      = document.getElementById("viewList");
+  var viewEditor    = document.getElementById("viewEditor");
+  var viewAnalytics = document.getElementById("viewAnalytics");
+  var entriesListEl = document.getElementById("entriesList");
+  var statsLine     = document.getElementById("statsLine");
+  var dateInput     = document.getElementById("dateInput");
+  var titleInput    = document.getElementById("titleInput");
+  var textInput     = document.getElementById("textInput");
+  var scoreInput    = document.getElementById("scoreInput");
+  var scoreDisplay  = document.getElementById("scoreDisplay");
+  var tagSettingsPanel = document.getElementById("tagSettingsPanel");
+  var activityTagList = document.getElementById("activityTagList");
+  var emotionTagList = document.getElementById("emotionTagList");
+  var newActivityInput = document.getElementById("newActivityInput");
+  var newEmotionInput = document.getElementById("newEmotionInput");
+
+  // ── UTILS ──────────────────────────────────────────────
+  function localDateStr(d) {
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1).padStart(2, "0");
+    var day = String(d.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + day;
+  }
+
+  function uniqueClean(list) {
+    var seen = {};
+    var out = [];
+    (list || []).forEach(function(item) {
+      var clean = String(item || "").trim();
+      if (!clean || seen[clean.toLowerCase()]) return;
+      seen[clean.toLowerCase()] = true;
+      out.push(clean);
+    });
+    return out;
+  }
+
+  function uniqueTagsFromEntries(list, field) {
+    var out = [];
+    var seen = {};
+    (list || []).forEach(function(entry) {
+      (entry[field] || []).forEach(function(tag) {
+        var clean = String(tag || "").trim();
+        if (!clean || seen[clean.toLowerCase()]) return;
+        seen[clean.toLowerCase()] = true;
+        out.push(clean);
+      });
+    });
+    return out.sort(function(a, b) { return a.localeCompare(b); });
+  }
+
+  function tagsForExport(list, field, activeTags) {
+    return uniqueClean((activeTags || []).concat(uniqueTagsFromEntries(list, field)));
+  }
+
+  function migrateTagList(list, migrations) {
+    var out = [];
+    (list || []).forEach(function(tag) {
+      var mapped = migrations[tag];
+      if (mapped) out = out.concat(mapped);
+      else out.push(tag);
+    });
+    return uniqueClean(out);
+  }
+
+  function normalizeEntry(entry) {
+    return {
+      date: String(entry.date || localDateStr(new Date())),
+      title: String(entry.title || ""),
+      text: String(entry.text || ""),
+      score: Number(entry.score || 5),
+      activities: migrateTagList(entry.activities || [], ACTIVITY_MIGRATIONS),
+      emotions: migrateTagList(entry.emotions || [], EMOTION_MIGRATIONS)
+    };
+  }
+
+  function normalizeEntries(list) {
+    return (Array.isArray(list) ? list : [])
+      .filter(function(e) { return e && typeof e.date === "string"; })
+      .map(normalizeEntry)
+      .sort(function(a, b) { return b.date.localeCompare(a.date); });
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  // ── DATA ───────────────────────────────────────────────
+  function populateYearSelects() {
+    var years = {};
+    entries.forEach(function(e) { years[e.date.slice(0,4)] = true; });
+    var sortedYears = Object.keys(years).sort().reverse();
+    var now = new Date();
+    var curYear = String(now.getFullYear());
+    var curMonth = String(now.getMonth() + 1).padStart(2, "0");
+
+    ["analyticsPickerYear", "listPickerYear"].forEach(function(id) {
+      var sel = document.getElementById(id);
+      if (!sel) return;
+      sel.innerHTML = "";
+      sortedYears.forEach(function(y) {
+        var opt = document.createElement("option");
+        opt.value = y;
+        opt.textContent = y;
+        sel.appendChild(opt);
+      });
+      sel.value = curYear;
+    });
+    // Set current month as default
+    var am = document.getElementById("analyticsPickerMonth");
+    var lm = document.getElementById("listPickerMonth");
+    if (am) am.value = curMonth;
+    if (lm) lm.value = curMonth;
+  }
+
+  function loadData() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) raw = localStorage.getItem(LEGACY_STORAGE_KEY);
+      if (!raw) { entries = []; activities = DEFAULT_ACTIVITIES.slice(); emotions = DEFAULT_EMOTIONS.slice(); return; }
+      var parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        entries = normalizeEntries(parsed);
+        activities = DEFAULT_ACTIVITIES.slice();
+        emotions = DEFAULT_EMOTIONS.slice();
+        saveData();
+        return;
+      }
+
+      entries = normalizeEntries(parsed.entries || []);
+      activities = migrateTagList(parsed.activities || DEFAULT_ACTIVITIES, ACTIVITY_MIGRATIONS);
+      emotions = migrateTagList(parsed.emotions || DEFAULT_EMOTIONS, EMOTION_MIGRATIONS);
+      if (!activities.length) activities = DEFAULT_ACTIVITIES.slice();
+      if (!emotions.length) emotions = DEFAULT_EMOTIONS.slice();
+    } catch(e) {
+      entries = [];
+      activities = DEFAULT_ACTIVITIES.slice();
+      emotions = DEFAULT_EMOTIONS.slice();
+    }
+  }
+
+  function saveData() {
+    try {
+      var payload = {
+        version: 2,
+        updatedAt: new Date().toISOString(),
+        activities: activities,
+        emotions: emotions,
+        entries: entries
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch(e) {
+      alert("Could not save: " + e.message);
+    }
+  }
+
+  // ── NAVIGATION ─────────────────────────────────────────
+  window.goToStep = function(n) {
+    document.querySelectorAll(".step").forEach(function(el) { el.classList.remove("active"); });
+    document.getElementById("step" + n).classList.add("active");
+  };
+
+  function showView(name) {
+    viewList.classList.remove("active");
+    viewEditor.classList.remove("active");
+    viewAnalytics.classList.remove("active");
+    if (name === "list")      { viewList.classList.add("active"); renderHome(); renderTagSettings(); }
+    if (name === "editor")    { viewEditor.classList.add("active"); }
+    if (name === "analytics") { viewAnalytics.classList.add("active"); renderAnalytics(); }
+  }
+
+  // ── HOME ───────────────────────────────────────────────
+  function getListFiltered() {
+    var now = new Date();
+    if (listRange === "all") return entries.slice();
+    if (listRange === "year") {
+      var y = String(now.getFullYear());
+      return entries.filter(function(e) { return e.date.startsWith(y); });
+    }
+    if (listRange === "month") {
+      var prefix = localDateStr(new Date(now.getFullYear(), now.getMonth(), 1)).slice(0,7);
+      return entries.filter(function(e) { return e.date.startsWith(prefix); });
+    }
+    if (listRange === "specificmonth" && listSpecificMonthStr) {
+      return entries.filter(function(e) { return e.date.startsWith(listSpecificMonthStr); });
+    }
+    return entries.slice();
+  }
+
+  function renderHome() {
+    entriesListEl.innerHTML = "";
+    currentPage = 0;
+    var filtered = getListFiltered();
+    var label = listRange === "all" ? entries.length + " saved entries"
+              : filtered.length + " entries (filtered from " + entries.length + ")";
+    statsLine.textContent = label;
+    if (filtered.length === 0) {
+      entriesListEl.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-weight:600;">No entries in this period.</div>';
+      return;
+    }
+    renderNextPage(filtered);
+    var wrap = document.querySelector(".wrap");
+    wrap.removeEventListener("scroll", onWrapScroll);
+    wrap.addEventListener("scroll", function() { onWrapScroll(filtered); });
+  }
+
+  function onWrapScroll(filtered) {
+    if (!viewList.classList.contains("active")) return;
+    var wrap = document.querySelector(".wrap");
+    if (wrap.scrollTop + wrap.clientHeight >= wrap.scrollHeight - 300) {
+      renderNextPage(filtered);
+    }
+  }
+
+  function renderNextPage(filtered) {
+    if (!filtered) filtered = getListFiltered();
+    var start = currentPage * PAGE_SIZE;
+    if (start >= filtered.length) return;
+    var end = Math.min(start + PAGE_SIZE, filtered.length);
+
+    var old = entriesListEl.querySelector(".load-more");
+    if (old) old.remove();
+
+    var frag = document.createDocumentFragment();
+    for (var i = start; i < end; i++) {
+      frag.appendChild(makeCard(filtered[i]));
+    }
+    entriesListEl.appendChild(frag);
+    currentPage++;
+
+    if (end < filtered.length) {
+      var loader = document.createElement("div");
+      loader.className = "load-more";
+      loader.textContent = "Showing " + end + " of " + filtered.length + " entries";
+      entriesListEl.appendChild(loader);
+    }
+  }
+
+  function makeCard(e) {
+    var card = document.createElement("div");
+    card.className = "entry-card";
+    var title = e.title ? " · " + escapeHtml(e.title) : "";
+    var preview = e.text || "No text yet...";
+    var score = Number(e.score || 0).toFixed(1);
+    var acts = (e.activities || []).length;
+    var emos = (e.emotions || []).length;
+    card.innerHTML =
+      '<div class="entry-date">' + e.date + title + "</div>" +
+      '<div class="entry-preview">' + escapeHtml(preview) + "</div>" +
+      '<div class="entry-meta">' +
+        '<span style="color:var(--accent-coral);font-weight:800;">★ ' + score + "</span>" +
+        "<span>" + acts + " act · " + emos + " emo</span>" +
+      "</div>";
+    card.addEventListener("click", function() { startEditor(e.date); });
+    return card;
+  }
+
+  // ── EDITOR ─────────────────────────────────────────────
+  function startEditor(dateToEdit) {
+    goToStep(1);
+    showView("editor");
+    if (dateToEdit) {
+      currentEntry = entries.find(function(e) { return e.date === dateToEdit; }) || createEmpty(dateToEdit);
+    } else {
+      var today = localDateStr(new Date());
+      currentEntry = entries.find(function(e) { return e.date === today; }) || createEmpty(today);
+    }
+    dateInput.value  = currentEntry.date;
+    titleInput.value = currentEntry.title || "";
+    textInput.value  = currentEntry.text  || "";
+    scoreInput.value = currentEntry.score || 5;
+    scoreDisplay.textContent = Number(scoreInput.value).toFixed(1);
+    renderCheckGrid("gridActivities", activities, currentEntry.activities || []);
+    renderCheckGrid("gridEmotions",   emotions,   currentEntry.emotions   || []);
+  }
+
+  function createEmpty(date) {
+    return { date: date, title: "", text: "", score: 5.0, activities: [], emotions: [] };
+  }
+
+  function saveCurrentState() {
+    currentEntry.date       = dateInput.value;
+    currentEntry.title      = titleInput.value;
+    currentEntry.text       = textInput.value;
+    currentEntry.score      = Number(scoreInput.value);
+    currentEntry.activities = getChecked("gridActivities");
+    currentEntry.emotions   = getChecked("gridEmotions");
+    var idx = entries.findIndex(function(e) { return e.date === currentEntry.date; });
+    if (idx >= 0) entries[idx] = currentEntry; else entries.push(currentEntry);
+    entries.sort(function(a, b) { return b.date.localeCompare(a.date); });
+    saveData();
+  }
+
+  function renderCheckGrid(id, items, selected) {
+    var container = document.getElementById(id);
+    container.innerHTML = "";
+    var set = new Set(selected);
+    items.forEach(function(item) {
+      var div = document.createElement("div");
+      div.className = "check-btn" + (set.has(item) ? " checked" : "");
+      div.textContent = item;
+      div.onclick = function() { div.classList.toggle("checked"); };
+      container.appendChild(div);
+    });
+  }
+
+  function getChecked(id) {
+    return Array.from(document.getElementById(id).querySelectorAll(".check-btn.checked"))
+      .map(function(d) { return d.textContent; });
+  }
+
+  function renderTagSettings() {
+    renderTagList(activityTagList, activities, "activity");
+    renderTagList(emotionTagList, emotions, "emotion");
+  }
+
+  function renderTagList(container, items, type) {
+    container.innerHTML = "";
+    items.forEach(function(item) {
+      var chip = document.createElement("span");
+      chip.className = "tag-chip";
+      chip.innerHTML = "<span>" + escapeHtml(item) + '</span><button type="button" aria-label="Remove ' + escapeHtml(item) + '">×</button>';
+      chip.querySelector("button").addEventListener("click", function() {
+        removeTag(type, item);
+      });
+      container.appendChild(chip);
+    });
+  }
+
+  function addTag(type) {
+    var input = type === "activity" ? newActivityInput : newEmotionInput;
+    var list = type === "activity" ? activities : emotions;
+    var value = String(input.value || "").trim();
+    if (!value) return;
+    if (list.some(function(item) { return item.toLowerCase() === value.toLowerCase(); })) {
+      alert("That tag already exists.");
+      return;
+    }
+    list.push(value);
+    input.value = "";
+    saveData();
+    renderTagSettings();
+    if (viewEditor.classList.contains("active")) {
+      renderCheckGrid("gridActivities", activities, currentEntry.activities || []);
+      renderCheckGrid("gridEmotions", emotions, currentEntry.emotions || []);
+    }
+  }
+
+  function removeTag(type, item) {
+    var list = type === "activity" ? activities : emotions;
+    var label = type === "activity" ? "activity" : "emotion";
+    if (!confirm('Remove "' + item + '" from available ' + label + " tags? Past entries will keep it.")) return;
+    if (type === "activity") activities = list.filter(function(x) { return x !== item; });
+    else emotions = list.filter(function(x) { return x !== item; });
+    saveData();
+    renderTagSettings();
+  }
+
+  // ── EVENTS ─────────────────────────────────────────────
+  document.getElementById("tabJournal").addEventListener("click", function() {
+    document.getElementById("tabJournal").classList.add("active");
+    document.getElementById("tabAnalytics").classList.remove("active");
+    showView("list");
+  });
+
+  document.getElementById("tabAnalytics").addEventListener("click", function() {
+    document.getElementById("tabAnalytics").classList.add("active");
+    document.getElementById("tabJournal").classList.remove("active");
+    showView("analytics");
+  });
+
+  document.getElementById("btnNew").addEventListener("click", function() { startEditor(null); });
+
+  document.getElementById("btnManageTags").addEventListener("click", function() {
+    tagSettingsPanel.classList.toggle("active");
+    renderTagSettings();
+  });
+
+  document.getElementById("btnAddActivity").addEventListener("click", function() { addTag("activity"); });
+  document.getElementById("btnAddEmotion").addEventListener("click", function() { addTag("emotion"); });
+  newActivityInput.addEventListener("keydown", function(e) { if (e.key === "Enter") addTag("activity"); });
+  newEmotionInput.addEventListener("keydown", function(e) { if (e.key === "Enter") addTag("emotion"); });
+
+  scoreInput.addEventListener("input", function() {
+    scoreDisplay.textContent = Number(scoreInput.value).toFixed(1);
+  });
+
+  document.getElementById("btnFinish").addEventListener("click", function() {
+    saveCurrentState();
+    showView("list");
+  });
+
+  document.getElementById("btnDeleteEntry").addEventListener("click", function() {
+    if (!confirm("Delete this entry?")) return;
+    entries = entries.filter(function(e) { return e.date !== currentEntry.date; });
+    saveData();
+    showView("list");
+  });
+
+  // Export / Import
+  document.getElementById("btnExport").addEventListener("click", function() {
+    var payload = {
+      version: 2,
+      exportedAt: new Date().toISOString(),
+      activities: activities,
+      emotions: emotions,
+      entries: entries
+    };
+    download("journal_backup_" + localDateStr(new Date()) + ".json", JSON.stringify(payload, null, 2), "application/json");
+  });
+
+  document.getElementById("btnExportCSV").addEventListener("click", function() {
+    download("journal_export.csv", generateCSV(), "text/csv;charset=utf-8;");
+  });
+
+  document.getElementById("importFile").addEventListener("change", function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        var imported = JSON.parse(ev.target.result);
+        var nextEntries = [];
+        var nextActivities = activities.slice();
+        var nextEmotions = emotions.slice();
+
+        if (Array.isArray(imported)) {
+          nextEntries = normalizeEntries(imported);
+        } else if (imported && Array.isArray(imported.entries)) {
+          nextEntries = normalizeEntries(imported.entries);
+          nextActivities = migrateTagList(imported.activities || DEFAULT_ACTIVITIES, ACTIVITY_MIGRATIONS);
+          nextEmotions = migrateTagList(imported.emotions || DEFAULT_EMOTIONS, EMOTION_MIGRATIONS);
+        } else {
+          throw new Error("Invalid journal backup.");
+        }
+
+        if (confirm("Import " + nextEntries.length + " entries and replace the current journal data?")) {
+          entries = nextEntries;
+          activities = nextActivities.length ? nextActivities : DEFAULT_ACTIVITIES.slice();
+          emotions = nextEmotions.length ? nextEmotions : DEFAULT_EMOTIONS.slice();
+          saveData();
+          populateYearSelects();
+          renderTagSettings();
+          renderHome();
+        }
+      } catch(err) {
+        alert("Could not import JSON: " + (err && err.message ? err.message : err));
+      }
+      e.target.value = "";
+    };
+    reader.readAsText(file);
+  });
+
+  // Analytics time range buttons
+  document.querySelectorAll(".time-btn").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      document.querySelectorAll(".time-btn").forEach(function(b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      currentRange = btn.dataset.range;
+      var cd = document.getElementById("customDates");
+      var mp = document.getElementById("analyticsMesPicker");
+      cd.classList.remove("active");
+      mp.classList.remove("active");
+      if (currentRange === "custom") { cd.classList.add("active"); }
+      else if (currentRange === "specificmonth") { mp.classList.add("active"); }
+      else { renderAnalytics(); }
+    });
+  });
+
+  document.getElementById("btnApplyCustom").addEventListener("click", function() {
+    var s = document.getElementById("customStart").value;
+    var en = document.getElementById("customEnd").value;
+    if (s && en) { customStartDate = s; customEndDate = en; renderAnalytics(); }
+  });
+
+  document.getElementById("btnApplySpecificMonth").addEventListener("click", function() {
+    var m = document.getElementById("analyticsPickerMonth").value;
+    var y = document.getElementById("analyticsPickerYear").value;
+    if (m && y) { specificMonthStr = y + "-" + m; renderAnalytics(); }
+  });
+
+  // List filter buttons
+  document.querySelectorAll(".list-filter-btn").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      document.querySelectorAll(".list-filter-btn").forEach(function(b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      listRange = btn.dataset.listRange;
+      var lmp = document.getElementById("listMesPicker");
+      if (listRange === "specificmonth") { lmp.classList.add("active"); }
+      else { lmp.classList.remove("active"); renderHome(); }
+    });
+  });
+
+  document.getElementById("btnApplyListMonth").addEventListener("click", function() {
+    var m = document.getElementById("listPickerMonth").value;
+    var y = document.getElementById("listPickerYear").value;
+    if (m && y) { listSpecificMonthStr = y + "-" + m; renderHome(); }
+  });
+
+  // ── EXPORT HELPERS ─────────────────────────────────────
+  function download(filename, content, mime) {
+    var blob = new Blob([content], { type: mime });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function generateCSV() {
+    var exportActivities = tagsForExport(entries, "activities", activities);
+    var exportEmotions = tagsForExport(entries, "emotions", emotions);
+    var header = ["Date","Score","Title","Text"].concat(exportActivities).concat(exportEmotions);
+    var lines = [header.join(",")];
+    entries.forEach(function(e) {
+      var row = [csv(e.date), csv(e.score), csv(e.title), csv(e.text)];
+      var acts = new Set(e.activities || []);
+      var emos = new Set(e.emotions   || []);
+      exportActivities.forEach(function(a)  { row.push(acts.has(a)  ? "1" : "0"); });
+      exportEmotions.forEach(function(em) { row.push(emos.has(em) ? "1" : "0"); });
+      lines.push(row.join(","));
+    });
+    return lines.join("\n");
+  }
+
+  function csv(v) {
+    if (v == null) return "";
+    var s = String(v);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+
+  // ── ANALYTICS ──────────────────────────────────────────
+  function getFiltered() {
+    var now = new Date();
+    if (currentRange === "custom" && customStartDate && customEndDate) {
+      return entries.filter(function(e) { return e.date >= customStartDate && e.date <= customEndDate; });
+    }
+    if (currentRange === "all") return entries.slice();
+    if (currentRange === "specificmonth" && specificMonthStr) {
+      return entries.filter(function(e) { return e.date.startsWith(specificMonthStr); });
+    }
+
+    var startStr, endStr;
+    if (currentRange === "month") {
+      startStr = localDateStr(new Date(now.getFullYear(), now.getMonth(), 1));
+    } else if (currentRange === "prevmonth") {
+      startStr = localDateStr(new Date(now.getFullYear(), now.getMonth() - 1, 1));
+      endStr   = localDateStr(new Date(now.getFullYear(), now.getMonth(), 0));
+    } else if (currentRange === "6months") {
+      startStr = localDateStr(new Date(now.getFullYear(), now.getMonth() - 6, now.getDate()));
+    } else if (currentRange === "year") {
+      startStr = localDateStr(new Date(now.getFullYear(), 0, 1));
+    } else {
+      startStr = localDateStr(new Date(now.getFullYear(), now.getMonth(), 1));
+    }
+
+    return endStr
+      ? entries.filter(function(e) { return e.date >= startStr && e.date <= endStr; })
+      : entries.filter(function(e) { return e.date >= startStr; });
+  }
+
+  function renderAnalytics() {
+    var filtered = getFiltered();
+    document.getElementById("statEntries").textContent = filtered.length;
+
+    if (filtered.length > 0) {
+      var avg = filtered.reduce(function(s, e) { return s + (e.score || 0); }, 0) / filtered.length;
+      document.getElementById("statAvgMood").textContent = avg.toFixed(2);
+
+      var best = filtered.reduce(function(b, e) { return e.score > b.score ? e : b; }, filtered[0]);
+      document.getElementById("statBestDay").textContent = best.date.slice(5);
+
+      var variance = filtered.reduce(function(s, e) { var d = (e.score||0) - avg; return s + d*d; }, 0) / filtered.length;
+      document.getElementById("statVariance").textContent = variance.toFixed(2);
+
+      var totalAct = filtered.reduce(function(s, e) { return s + (e.activities||[]).length; }, 0);
+      document.getElementById("statAvgActivities").textContent = (totalAct / filtered.length).toFixed(2);
+
+      var totalEmo = filtered.reduce(function(s, e) { return s + (e.emotions||[]).length; }, 0);
+      document.getElementById("statAvgEmotions").textContent = (totalEmo / filtered.length).toFixed(2);
+    } else {
+      ["statAvgMood","statBestDay","statVariance","statAvgActivities","statAvgEmotions"].forEach(function(id) {
+        document.getElementById(id).textContent = "-";
+      });
+    }
+
+    renderMoodChart(filtered);
+    renderActivitiesChart(filtered);
+    renderEmotionsChart(filtered);
+  }
+
+  function destroyChart(c) { if (c) { try { c.destroy(); } catch(e) {} } return null; }
+
+  function renderMoodChart(filtered) {
+    var wrapper = document.getElementById("chartMoodWrapper");
+    moodChart = destroyChart(moodChart);
+    if (!filtered.length) { wrapper.innerHTML = '<div class="empty-chart">No data in this period</div>'; return; }
+    wrapper.innerHTML = '<canvas id="chartMood"></canvas>';
+    var sorted = filtered.slice().sort(function(a,b) { return a.date.localeCompare(b.date); });
+    moodChart = new Chart(document.getElementById("chartMood"), {
+      type: "line",
+      data: {
+        labels: sorted.map(function(e) { return e.date; }),
+        datasets: [{
+          data: sorted.map(function(e) { return e.score || 0; }),
+          borderColor: "#FF8E7B", backgroundColor: "rgba(255,142,123,0.1)",
+          borderWidth: 3, fill: true, tension: 0.4,
+          pointRadius: 5, pointBackgroundColor: "#FF8E7B", pointBorderColor: "#fff", pointBorderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: "rgba(0,0,0,0.8)", padding: 12,
+            callbacks: {
+              label: function(ctx) {
+                var e = sorted[ctx.dataIndex];
+                var lines = ["Mood: " + ctx.parsed.y.toFixed(1)];
+                if (e.title) lines.push('"' + e.title + '"');
+                return lines;
+              }
+            }
+          },
+          zoom: {
+            pan: {
+              enabled: true,
+              mode: "x"
+            },
+            zoom: {
+              wheel: { enabled: false },
+              pinch: { enabled: true },
+              mode: "x"
+            }
+          }
+        },
+        scales: {
+          y: { grid: { color: "rgba(255,255,255,0.1)" }, ticks: { color: "#AAB2D6" } },
+          x: { grid: { display: false }, ticks: { color: "#AAB2D6", maxRotation: 45, minRotation: 45 } }
+        }
+      }
+    });
+
+    // Reset zoom button
+    var btnReset = document.getElementById("btnResetZoom");
+    if (btnReset) {
+      btnReset.onclick = function() { if (moodChart) moodChart.resetZoom(); };
+    }
+  }
+
+  function renderBarChart(canvasId, chartRef, labels, data, color, setter) {
+    var wrapper = document.getElementById(canvasId + "Wrapper");
+    chartRef = destroyChart(chartRef);
+    if (data.length === 0 || !data.some(function(v) { return v > 0; })) {
+      wrapper.innerHTML = '<div class="empty-chart">No data in this period</div>';
+      setter(null); return;
+    }
+    wrapper.innerHTML = '<canvas id="' + canvasId + '"></canvas>';
+    var c = new Chart(document.getElementById(canvasId), {
+      type: "bar",
+      data: { labels: labels, datasets: [{ data: data, backgroundColor: color + "cc", borderColor: color, borderWidth: 2, borderRadius: 8 }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { backgroundColor: "rgba(0,0,0,0.8)", padding: 12 } },
+        scales: {
+          y: { beginAtZero: true, grid: { color: "rgba(255,255,255,0.1)" }, ticks: { color: "#AAB2D6", stepSize: 1 } },
+          x: { grid: { display: false }, ticks: { color: "#AAB2D6", maxRotation: 45, minRotation: 45 } }
+        }
+      }
+    });
+    setter(c);
+  }
+
+  function renderActivitiesChart(filtered) {
+    var labels = uniqueTagsFromEntries(filtered, "activities");
+    var counts = labels.map(function(a) {
+      return filtered.reduce(function(s,e) { return s + ((e.activities||[]).indexOf(a) >= 0 ? 1 : 0); }, 0);
+    });
+    renderBarChart("chartActivities", activitiesChart, labels, counts, "#56CCF2",
+      function(c) { activitiesChart = c; });
+  }
+
+  function renderEmotionsChart(filtered) {
+    var labels = uniqueTagsFromEntries(filtered, "emotions");
+    var counts = labels.map(function(em) {
+      return filtered.reduce(function(s,e) { return s + ((e.emotions||[]).indexOf(em) >= 0 ? 1 : 0); }, 0);
+    });
+    renderBarChart("chartEmotions", emotionsChart, labels, counts, "#FF8E7B",
+      function(c) { emotionsChart = c; });
+  }
+
+  // ── INIT ───────────────────────────────────────────────
+  loadData();
+  populateYearSelects();
+  renderTagSettings();
+  renderHome();
+
+}());
+</script>
+</body>
+</html>
